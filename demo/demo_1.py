@@ -34,7 +34,7 @@ class QueryResult(BaseModel):
 
 # Configure Ollama to work with Pydantic AI using OpenAI-compatible interface
 ollama_model = OpenAIModel(
-    model_name='llama3.1:8b-instruct-q8_0',
+    model_name='llama3.1:latest',
     provider=OpenAIProvider(base_url='http://localhost:11434/v1'),
     system="You are a helpful CSV data analysis assistant. Your job is to answer questions about CSV data by analyzing it and providing accurate statistics and insights. Always explain your reasoning clearly. Always return relevant_columns as a list, even if empty."
 )
@@ -42,7 +42,6 @@ ollama_model = OpenAIModel(
 # Create our agent
 agent = Agent(
     ollama_model,
-   
 )
 
 # Define tools for the agent

@@ -23,7 +23,7 @@ try:
     logger.info("Successfully initialized CSVQueryAgent")
 except Exception as e:
     logger.error(f"Error initializing CSVQueryAgent: {str(e)}")
-    # We'll handle this in the query processing function
+    llm_agent = None
 
 # Global variables to store state
 current_df = None
@@ -36,16 +36,17 @@ def process_csv_file(file_obj):
     if file_obj is None:
         return None, "Please upload a CSV file."
     
-    # Store original filename if available
-    if hasattr(file_obj, 'name'):
-        current_filename = os.path.basename(file_obj.name)
-    
+    # Process the CSV file
     preview_df, error = csv_handler.process_csv(file_obj)
     if error:
         return None, error
     
     current_df = csv_handler.get_dataframe()
     summary = csv_handler.get_summary()
+    
+    # Get filename from handler if available
+    if hasattr(csv_handler, '_validated_filename'):
+        current_filename = csv_handler._validated_filename
     
     # Create a summary message
     summary_msg = f"""
@@ -72,7 +73,7 @@ def process_query(query):
     
     try:
         # Check if LLM agent is available
-        if 'llm_agent' not in globals() or llm_agent is None:
+        if llm_agent is None:
             return "LLM agent is not available. Please check your Ollama installation and model availability.", None
         
         # Process the query using the LLM agent
@@ -93,6 +94,7 @@ def process_query(query):
                     title=result.title
                 )
             except Exception as e:
+                logger.error(f"Error creating plot: {str(e)}")
                 result.answer += f"\n\nNote: Could not generate plot: {str(e)}"
         
         # Format the response
@@ -135,16 +137,16 @@ def create_demo_interface():
         
         with gr.Row():
             with gr.Column():
-                response_output = gr.Textbox(label="Response", interactive=False)
+                response_output = gr.Textbox(label="Response", interactive=False, lines=10)
                 plot_output = gr.Plot(label="Visualization")
         
         # Add example queries
         gr.Examples(
             examples=[
-                ["What is the average price in this dataset?"],
-                ["Show me a histogram of the number of bedrooms."],
-                ["What's the correlation between price and square footage?"],
-                ["What are the top 5 most expensive properties?"],
+                ["What is the average value in this dataset?"],
+                ["Show me a histogram of the numeric columns."],
+                ["What's the correlation between the first two numeric columns?"],
+                ["What are the top 5 highest values in the dataset?"],
                 ["Summarize this dataset for me."]
             ],
             inputs=query_input
