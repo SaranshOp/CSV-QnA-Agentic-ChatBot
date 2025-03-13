@@ -42,7 +42,7 @@ ollama_model = OpenAIModel(
 # Create our agent
 agent = Agent(
     ollama_model,
-    max_retries=3  # Set default retries for the agent
+   
 )
 
 # Define tools for the agent
